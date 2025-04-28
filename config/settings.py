@@ -6,13 +6,14 @@ from datetime import timedelta
 from environs import Env
 from rest_framework import ISO_8601
 
-env = Env()
-env.read_env()
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
 
+env = Env()
+env.read_env(path=BASE_DIR / '.env', override=True)
 
 
 
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
     
     'post.apps.PostConfig',
     'feed.apps.FeedConfig',
@@ -138,6 +140,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Social Network API',
+    'DESCRIPTION': 'Middle social network',
+    'VERSION': '1.0.0',
+}
 
 REST_FRAMEWORK = {
     # Base API policies
@@ -168,7 +175,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': [],
 
     # Schema
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
     # Throttling
     'DEFAULT_THROTTLE_RATES': {
