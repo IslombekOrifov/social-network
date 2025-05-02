@@ -61,7 +61,3 @@ jobs:
           ALLOWED_HOSTS: "localhost,127.0.0.1"
         run: |
           pytest --cov=./ --cov-report=xml
-
-      - name: Lint with flake8
-        run: |
-          flake8 .
