@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Registration Confirmation</title>
+</head>
+<body>
+    <h2>Registration Confirmation</h2>
+    <p>Hello, {{ user.username }}!</p>
+    <p>Your verification code is: <strong>{{ verification_code }}</strong></p>
+    <p>The code is valid for 15 minutes.</p>
+    <p>If you did not register on our website, please ignore this email.</p>
+    <p>Best regards,<br>The {{ support_email }} Team</p>
+</body>
+</html>

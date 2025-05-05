@@ -1,5 +1,8 @@
+import random
+import string
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from .validators import validate_phone
 
 
@@ -17,10 +20,32 @@ class CustomUser(AbstractUser):
     )
     date_of_birth = models.DateField(blank=True, null=True)
     about = models.CharField(max_length=300, blank=True)
+    is_confirmed = models.BooleanField(default=False)
 
     is_deleted = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.username } - {self.email}"
-    
+
+
+class VerificationCode(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    @classmethod
+    def create_verification_code(cls, user):
+        code = ''.join(random.choices(string.digits, k=6))
+        cls.objects.filter(user=user).delete()
+        expires_at = timezone.now() + timezone.timedelta(minutes=15)
+        
+        return cls.objects.create(
+            user=user,
+            code=code,
+            expires_at=expires_at
+        )
+
+    def is_valid(self):
+        return timezone.now() < self.expires_at

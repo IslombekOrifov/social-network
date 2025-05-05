@@ -66,7 +66,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR /'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -149,6 +149,15 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env.str("EMAIL_HOST", 'your_smtp_host')
+EMAIL_PORT = env.int("EMAIL_PORT", 587)
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", True)
+EMAIL_HOST_USER = env.str("EMAIL_HOST_USER", 'your_email')
+EMAIL_HOST_PASSWORD = env.str("EMAIL_HOST_PASSWORD", 'your_password')
+DEFAULT_FROM_EMAIL = env.str("DEFAULT_FROM_EMAIL", 'your_email')
+SUPPORT_EMAIL = env.str("SUPPORT_EMAIL", 'your_email')
 
 # CACHES = {
 #     'default': {
