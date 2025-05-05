@@ -8,7 +8,8 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ['id', 'name', 'slug', 'usage_count']
-        
+
+
 class PostMediaSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostMedia
@@ -17,7 +18,8 @@ class PostMediaSerializer(serializers.ModelSerializer):
             'duration', 'width', 'height'
         ]
         read_only_fields = ['thumbnail', 'width', 'height', 'duration']
-        
+
+
 class CommentSerializer(serializers.ModelSerializer):
     user = UserShortSerializer(read_only=True)
     like_count = serializers.SerializerMethodField()
@@ -36,6 +38,7 @@ class CommentSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.likes.filter(id=request.user.id).exist()
         return False
+
 
 class PostSerializer(serializers.ModelSerializer):
     owner = UserShortSerializer(read_only=True)
@@ -74,7 +77,8 @@ class PostSerializer(serializers.ModelSerializer):
     def get_is_owner(self, obj):
         request = self.context.get('request')
         return request and request.user == obj.owner
-    
+
+
 class PostCreateSerializer(serializers.ModelSerializer):
     media_files = serializers.ListSerializer(
         child=serializers.FileField(),
@@ -108,7 +112,8 @@ class PostCreateSerializer(serializers.ModelSerializer):
             tag, created = Tag.objects.get_or_create(name=tag_name.lower())
             post.tags.add(tag)
         return post
-    
+
+
 class PostReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostReport

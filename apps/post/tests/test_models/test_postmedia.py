@@ -1,6 +1,7 @@
 import pytest
 from post.models import PostMedia
 
+
 @pytest.mark.django_db
 class TestPostMedia:
     def test_create_image_media(self,sample_post, sample_image):

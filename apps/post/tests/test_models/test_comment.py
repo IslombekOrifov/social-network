@@ -1,6 +1,7 @@
 import pytest
 from post.models import Comment
 
+
 @pytest.mark.django_db
 class TestCommentModel:
     def test_create_comment(self, sample_post, sample_user):

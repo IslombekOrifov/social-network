@@ -12,6 +12,7 @@ class TestCustomUserModel:
         assert user.phone == '+998912345678'
         assert not user.is_verified
         assert not user.is_deleted
+        assert not user.is_confirmed
 
     def test_phone_validation_success(self, create_user):
         valid_numbers = [

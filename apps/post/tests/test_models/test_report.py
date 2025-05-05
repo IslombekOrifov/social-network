@@ -1,6 +1,7 @@
 import pytest
 from post.models import PostReport
 
+
 @pytest.mark.django_db
 class TestPostReportModel:
     def test_create_repost(self, sample_post, sample_user):

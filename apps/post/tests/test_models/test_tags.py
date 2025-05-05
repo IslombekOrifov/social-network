@@ -1,6 +1,7 @@
 import pytest
 from post.models import Tag
 
+
 @pytest.mark.django_db
 class TestTagModel:
     def test_create_tag(self):

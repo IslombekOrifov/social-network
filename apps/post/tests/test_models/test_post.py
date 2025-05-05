@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.utils import timezone
 from post.models import Post, PostMedia, Tag, Comment
 
+
 @pytest.mark.django_db
 class TestPostModel:
     def test_create_post(self, sample_post):
