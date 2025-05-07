@@ -24,6 +24,12 @@ class CustomUser(AbstractUser):
 
     is_deleted = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    subscriptions = models.ManyToManyField(
+        'self',
+        symmetrical=False,
+        related_name='subscribers',
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.username } - {self.email}"

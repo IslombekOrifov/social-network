@@ -6,7 +6,9 @@ from rest_framework_simplejwt.views import (
 )
 from .views import (
     TokenToBlacklistView, RegistrationView,
-    VerifyWithEmailView, ResendVerificationCodeView
+    VerifyWithEmailView, ResendVerificationCodeView,
+    CustomUserProfileAPIView, SubscribeAPIView,
+    UnsubscribeAPIView
 )
 
 urlpatterns = [
@@ -16,6 +18,12 @@ urlpatterns = [
     path('auth/token/blacklist/', TokenToBlacklistView.as_view(), name='token_verify'),
 
     path('register/', RegistrationView.as_view(), name='register'),
-    path('verify-email/', VerifyWithEmailView.as_view(), name='verify-email'),
-    path('resend-verification/', ResendVerificationCodeView.as_view(), name='resend-verification'),
+    path('verify-email/', VerifyWithEmailView.as_view(), name='verify_email'),
+    path('resend-verification/', ResendVerificationCodeView.as_view(), name='resend_verification'),
+
+    path('profile/', CustomUserProfileAPIView.as_view(), name='user_profile'),
+    path('profile/<int:pk>/', CustomUserProfileAPIView.as_view(), name='user_profile_detail'),
+    
+    path('subscribe/<int:user_id>/', SubscribeAPIView.as_view(), name='subscribe'),
+    path('unsubscribe/<int:user_id>/', UnsubscribeAPIView.as_view(), name='unsubscribe'),
 ]

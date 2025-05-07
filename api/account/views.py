@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework import generics, permissions, status
 from rest_framework.views import APIView
@@ -71,14 +72,14 @@ class ResendVerificationCodeView(APIView):
                     },
                     status=status.HTTP_200_OK
                 )
-                verification = VerificationCode.create_verification_code(user)
-                send_confirm_email(email, verification.code)
-                return Response(
-                    {
-                        'message': "A new verification code has been sent to your email."
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            verification = VerificationCode.create_verification_code(user)
+            send_confirm_email(email, verification.code)
+            return Response(
+                {
+                    'message': "A new verification code has been sent to your email."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except CustomUser.DoesNotExist:
             return Response(
                 {
@@ -98,3 +99,85 @@ class TokenToBlacklistView(APIView):
             return Response({"detail": "Successfully logged out."})
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+
+
+class CustomUserProfileAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk=None):
+        if pk:
+            user = get_object_or_404(
+                CustomUser,
+                pk=pk,
+                is_active=True,
+                is_deleted=False,
+                is_verified=True
+            )
+        else:
+            user = request.user
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data)
+
+    def patch(self, request, pk=None):
+        user = request.user
+        if pk and pk != user.id:
+            return Response(
+                {"detail": "You can only edit your own profile."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = CustomUserSerializer(instance=user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class SubscribeAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request, user_id):
+        user_to_subscribe = get_object_or_404(
+            CustomUser,
+            pk=user_id,
+            is_active=True,
+            is_deleted=False,
+            is_verified=True
+        )
+        if request.user == user_to_subscribe:
+            return Response(
+                {'detail': 'You cannot subscribe to yourself.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if request.user.subscriptions.filter(pk=user_id).exists():
+            return Response(
+                {'detail': 'You are already subscribed to this user.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        request.user.subscriptions.add(user_to_subscribe)
+        return Response(
+            {'detail': 'subcsribed'},
+            status=status.HTTP_200_OK
+        )
+
+
+class UnsubscribeAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, user_id):
+        user_to_unsubscribe = get_object_or_404(
+            CustomUser,
+            pk=user_id,
+            is_active=True,
+            is_deleted=False,
+            is_verified=True
+        )
+        
+        if not request.user.subscribtions.filter(pk=user_id).exists():
+            return Response(
+                {'detail': 'You are not subscribed to this user.'},
+                status=status.HTTP_200_OK
+            )
+        request.user.subscriptions.remove(user_to_unsubscribe)
+        return Response(
+            {"detail": "unsubscribed"},
+            status=status.HTTP_200_OK
+        )

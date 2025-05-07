@@ -58,9 +58,22 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
+    subscriptions = UserShortSerializer(many=True, read_only=True)
+    subscriptions_count = serializers.SerializerMethodField()
+    subscribers = UserShortSerializer(many=True, read_obly=True)
+    subscribers_count = serializers.SerializerMethodField()
+    
     class Meta:
         fields = [
             'username', 'first_name', 'last_name',
             'email', 'phone', 'photo', 'middle_name', 
-            'date_of_birth', 'about'
+            'date_of_birth', 'about', 'subscriptions',
+            'subscribers', 'subscriptions_count',
+            'subscribers_count'
         ]
+
+    def get_subscriptions_count(self, obj):
+        return obj.subscriptions.count()
+
+    def get_subscribers_count(self, obj):
+        return obj.subscribers.count()
