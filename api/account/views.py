@@ -7,8 +7,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from account.models import CustomUser, VerificationCode
 from account.tasks import send_confirm_email
 from .serializers import (
-    UserCeateSerializer, CustomUserSerializer,
-    VerifyUserEmailSerializer
+    UserShortSerializer, UserCeateSerializer,
+    CustomUserSerializer, VerifyUserEmailSerializer
 )
 
 
@@ -171,7 +171,7 @@ class UnsubscribeAPIView(APIView):
             is_verified=True
         )
         
-        if not request.user.subscribtions.filter(pk=user_id).exists():
+        if not request.user.subscriptions.filter(pk=user_id).exists():
             return Response(
                 {'detail': 'You are not subscribed to this user.'},
                 status=status.HTTP_200_OK
@@ -181,3 +181,21 @@ class UnsubscribeAPIView(APIView):
             {"detail": "unsubscribed"},
             status=status.HTTP_200_OK
         )
+
+
+class MySubscriptionsAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        subscriptions = request.user.subscriptions.all()
+        serializer = UserShortSerializer(subscriptions, many=True)
+        return Response(serializer.data)
+
+
+class MySubscribersAPIView(APIView):
+    permission_classes = [permissions]
+
+    def get(self, request):
+        subscribers = request.user.subscribers.all()
+        serializer = UserShortSerializer(subscribers, many=True)
+        return Response(serializer.data)

@@ -8,7 +8,8 @@ from .views import (
     TokenToBlacklistView, RegistrationView,
     VerifyWithEmailView, ResendVerificationCodeView,
     CustomUserProfileAPIView, SubscribeAPIView,
-    UnsubscribeAPIView
+    UnsubscribeAPIView, MySubscriptionsAPIView,
+    MySubscribersAPIView
 )
 
 urlpatterns = [
@@ -26,4 +27,6 @@ urlpatterns = [
     
     path('subscribe/<int:user_id>/', SubscribeAPIView.as_view(), name='subscribe'),
     path('unsubscribe/<int:user_id>/', UnsubscribeAPIView.as_view(), name='unsubscribe'),
+    path('my-subscriptions/', MySubscriptionsAPIView.as_view(), name='my_subscriptions'),
+    path('my-subscribers/', MySubscribersAPIView.as_view(), name='my_subscribers'),
 ]
