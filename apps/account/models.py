@@ -6,6 +6,43 @@ from django.utils import timezone
 from .validators import validate_phone
 
 
+class Subscription(models.Model):
+    class SubscriptionStatus(models.TextChoices):
+        ACTIVE = 'active', 'Active'
+        MUTED = 'muted', 'Muted'
+        PENDING = 'pending', 'Pending'
+    
+    subscriber = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='subscriptions'
+    )
+    target_user = models.ForeignKey(
+        'CustomUser', 
+        on_delete=models.CASCADE, 
+        related_name='subscribers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=10,
+        choices=SubscriptionStatus.choices,
+        default=SubscriptionStatus.ACTIVE
+    )
+    notify = models.BooleanField(default=True)
+
+    class Meta:
+        unique_together = ('subscriber', 'target_user')
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        indexes = [
+            models.Index(fields=['subscriber', 'status']),
+            models.Index(fields=['target_user', 'status']),
+        ]
+
+    def __str__(self):
+        return f'{self.subscriber} → {self.target_user} ({self.status})'
+
+
 class CustomUser(AbstractUser):
     """ Custom user model """
     phone = models.CharField(
@@ -22,14 +59,34 @@ class CustomUser(AbstractUser):
     about = models.CharField(max_length=300, blank=True)
     is_confirmed = models.BooleanField(default=False)
 
+    is_private = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    subscriptions = models.ManyToManyField(
-        'self',
-        symmetrical=False,
-        related_name='subscribers',
-        blank=True
-    )
+    
+    def subscribe_to(self, user):
+        if self.is_private:
+            Subscription.objects.get_or_create(
+                subscriber=self,
+                target_user=user,
+                status=Subscription.SubscriptionStatus.PENDING
+            )
+        else:
+            Subscription.objects.get_or_create(
+                subscriber=self,
+                target_user=user
+            )
+            
+    def get_subscribers(self):
+        return CustomUser.objects.filter(
+            subscribers__subscriber=self,
+            subscribers__status=Subscription.SubscriptionStatus.ACTIVE
+        )
+    
+    def get_subscriptions(self):
+        return CustomUser.objects.filter(
+            subscriptions__target_user=self,
+            subscriptions__status=Subscription.SubscriptionStatus.ACTIVE
+        )
 
     def __str__(self):
         return f"{self.username } - {self.email}"

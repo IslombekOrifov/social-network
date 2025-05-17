@@ -1,18 +1,13 @@
 from rest_framework import serializers
 from django.core import exceptions
 from django.contrib.auth.password_validation import validate_password
-from account.models import CustomUser, VerificationCode
+from account.models import CustomUser, VerificationCode, Subscription
 
 
-class UserCeateSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(
-        write_only=True,
-        required=True
-    )
-    password2 = serializers.CharField(
-        write_only=True,
-        required=True
-    )
+class UserCreateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    password2 = serializers.CharField(write_only=True, required=True)
+
     class Meta:
         model = CustomUser
         fields = [
@@ -20,18 +15,19 @@ class UserCeateSerializer(serializers.ModelSerializer):
             'first_name', 'last_name', 'password',
             'password2'
         ]
-    
-    def validate_password(self, data):
+
+    def validate(self, data):
         if data['password'] != data['password2']:
-            raise serializers.ValidationError({'password': "Password not similar"})
+            raise serializers.ValidationError({'password': "Passwords do not match"})
         try:
             validate_password(data['password'])
         except exceptions.ValidationError as error:
             raise serializers.ValidationError({'password': list(error.messages)})
-    
+        return data
+
     def create(self, validated_data):
         validated_data.pop('password2')
-        user = CustomUser.objecs.create_user(**validated_data)
+        user = CustomUser.objects.create_user(**validated_data)
         VerificationCode.create_verification_code(user)
         return user
 
@@ -45,35 +41,48 @@ class VerifyUserEmailSerializer(serializers.Serializer):
             user = CustomUser.objects.get(email=data['email'])
             verification = VerificationCode.objects.get(user=user)
             if not verification.is_valid():
-                raise serializers.ValidationError("verification code expired")
+                raise serializers.ValidationError({"code": "Verification code expired"})
             if verification.code != data['code']:
-                raise serializers.ValidationError('Wrong verification code')
-        except (CustomUser.DoesNotExist, VerificationCode.DoesNotExist):
-            raise serializers.ValidationError('Wrong email or verification code')
+                raise serializers.ValidationError({"code": "Invalid verification code"})
+            data['user'] = user
+            return data
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"email": "User with this email does not exist"})
+        except VerificationCode.DoesNotExist:
+            raise serializers.ValidationError({"code": "Verification code not found"})
 
 
 class UserShortSerializer(serializers.ModelSerializer):
     class Meta:
-        fields = ['username', 'photo']
+        model = CustomUser
+        fields = ['id', 'username', 'photo']
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    subscriptions = UserShortSerializer(many=True, read_only=True)
+    subscriptions = serializers.SerializerMethodField()
     subscriptions_count = serializers.SerializerMethodField()
-    subscribers = UserShortSerializer(many=True, read_obly=True)
+    subscribers = serializers.SerializerMethodField()
     subscribers_count = serializers.SerializerMethodField()
-    
+
     class Meta:
+        model = CustomUser
         fields = [
-            'username', 'first_name', 'last_name',
-            'email', 'phone', 'photo', 'middle_name', 
-            'date_of_birth', 'about', 'subscriptions',
-            'subscribers', 'subscriptions_count',
-            'subscribers_count'
+            'id', 'username', 'first_name', 'last_name', 'middle_name',
+            'email', 'phone', 'photo', 'date_of_birth', 'about',
+            'is_private', 'is_verified', 'subscriptions',
+            'subscribers', 'subscriptions_count', 'subscribers_count'
         ]
 
+    def get_subscriptions(self, obj):
+        subscriptions = obj.get_subscriptions()
+        return UserShortSerializer(subscriptions, many=True).data
+
+    def get_subscribers(self, obj):
+        subscribers = obj.get_subscribers()
+        return UserShortSerializer(subscribers, many=True).data
+
     def get_subscriptions_count(self, obj):
-        return obj.subscriptions.count()
+        return obj.get_subscriptions().count()
 
     def get_subscribers_count(self, obj):
-        return obj.subscribers.count()
+        return obj.get_subscribers().count()
