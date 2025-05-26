@@ -13,6 +13,9 @@ urlpatterns = [
     path('api/account/', include('api.account.urls')), 
     path('api/post/', include('api.post.urls')), 
     path('api/feed/', include('api.feed.urls')), 
+    
+    path('', include('feed.urls')),
+    path('account/', include('account.urls')), 
 ]
 
 if settings.DEBUG:
